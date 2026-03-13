@@ -46,13 +46,13 @@ Claude Code 在 Windows 上会在工作目录中创建无法删除的 `nul` 文�
 ### irm（无需任何工具）
 
 ```powershell
-irm https://raw.githubusercontent.com/nonul/nonul/main/nonul.ps1 | iex
+irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 | iex
 ```
 
 ### Scoop
 
 ```powershell
-scoop bucket add nonul https://github.com/nonul/nonul
+scoop bucket add nonul https://github.com/4laoshiren/nonul
 scoop install nonul
 ```
 
@@ -67,7 +67,7 @@ npm install -g nonul
 ### irm
 
 ```powershell
-irm https://raw.githubusercontent.com/nonul/nonul/main/nonul.ps1 -OutFile nonul.ps1; .\nonul.ps1 -Uninstall
+irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 -OutFile nonul.ps1; .\nonul.ps1 -Uninstall
 ```
 
 ### Scoop
