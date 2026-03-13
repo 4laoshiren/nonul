@@ -1,0 +1,23 @@
+{
+  "name": "nonul",
+  "version": "1.0.0",
+  "description": "替换 Windows 资源管理器右键菜单中的「删除」，能处理 nul 保留文件名",
+  "scripts": {
+    "postinstall": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./nonul.ps1 -Install",
+    "preuninstall": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./nonul.ps1 -Uninstall"
+  },
+  "os": [
+    "win32"
+  ],
+  "files": [
+    "nonul.ps1"
+  ],
+  "keywords": [
+    "windows",
+    "nul",
+    "delete",
+    "explorer",
+    "context-menu"
+  ],
+  "license": "MIT"
+}
