@@ -1,28 +1,38 @@
 # nonul
 
-> **TL;DR** 装完之后，右键删除文件夹就能删除含有nul文件的文件夹，解决使用claude code的项目删除时需要先处理nul文件的烦躁。
+[中文版](README_zh-CN.md)
 
-替换 Windows 资源管理器右键菜单中**文件夹**的「删除」。用户看到的还是一个「删除」，但这个版本能处理含 `nul` 文件的文件夹。
+Replaces the **folder** "Delete" option in the Windows Explorer context menu. You still see the same "Delete", but this version can handle folders containing `nul` files.
 
-## 演示
+## TL;DR
 
-| former | after |
-| :-----: | :-----: |
-| ![former](former.gif) | ![after](after.gif) |
+Once installed, right-click "Delete" on any folder will work even if it contains `nul` files — no more hassle when deleting Claude Code projects on Windows.
 
-## 如何使用？
+## Demo
 
-两种方式任选其一，装完立即生效，无需其他操作，你的windows文件资源管理器右键菜单中的删除将能够直接删除含有nul文件的文件夹。
+**Before:**
 
-### irm（无需任何工具）
+![before](former.gif)
 
-安装：
+**After:**
+
+![after](after.gif)
+
+## Usage
+
+Pick either method. Takes effect immediately after installation — the "Delete" option in your Windows Explorer context menu will be able to delete folders containing `nul` files.
+
+<sub>Although the project provides a reliable uninstall command, you can always back up your current registry before installing: Registry Editor → File → Export</sub>
+
+### irm (no tools required)
+
+Install:
 
 ```powershell
 irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 | iex
 ```
 
-卸载：
+Uninstall:
 
 ```powershell
 irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 -OutFile nonul.ps1; .\nonul.ps1 -Uninstall
@@ -30,26 +40,26 @@ irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 -OutFile n
 
 ### Scoop
 
-安装：
+Install:
 
 ```powershell
 scoop bucket add nonul https://github.com/4laoshiren/nonul
 scoop install nonul
 ```
 
-卸载：
+Uninstall:
 
 ```powershell
 scoop uninstall nonul
 ```
 
-## 为什么需要这个？
+## Why do I need this?
 
-`nul` 是 Windows 保留设备名。如果一个文件夹里有叫 `nul` 的文件，整个文件夹都删不掉——资源管理器会报错，`rd /s` 也不行。
+`nul` is a Windows reserved device name. If a folder contains a file named `nul`, the entire folder becomes undeletable — Explorer throws an error, and `rd /s` fails too.
 
-Claude Code 在 Windows 上会在工作目录中创建无法删除的 `nul` 文件，这是一个已知且被大量报告的 bug。使用 Claude Code 一段时间后，项目目录中就会散落多个 `nul` 文件，导致整个项目文件夹无法删除。
+Claude Code on Windows creates undeletable `nul` files in the working directory. This is a known and widely reported bug. After using Claude Code for a while, `nul` files accumulate across your project directories, making entire project folders impossible to delete.
 
-相关 issue：
+Related issues:
 [#4928](https://github.com/anthropics/claude-code/issues/4928)
 [#5449](https://github.com/anthropics/claude-code/issues/5449)
 [#10543](https://github.com/anthropics/claude-code/issues/10543)
@@ -61,50 +71,50 @@ Claude Code 在 Windows 上会在工作目录中创建无法删除的 `nul` 文�
 [#23942](https://github.com/anthropics/claude-code/issues/23942)
 [microsoft/vscode#290986](https://github.com/microsoft/vscode/issues/290986)
 
-目前唯一的删除方式是通过命令行执行 `[System.IO.File]::Delete('\\?\完整路径')`，但这对日常使用很不直观——删除项目应当可以右键删除。
+Currently the only way to delete these files is via command line: `[System.IO.File]::Delete('\\?\full\path')`, which is far from intuitive — deleting a project should be as simple as right-click Delete.
 
-## 项目做了什么？
+## What does this project do?
 
-> 一言以蔽之：在注册表的文件夹操作中里创建了一个delete键，此键存在时，会覆盖原生右键文件夹删除操作。此delete键的逻辑为，调用wscript.exe，删文件夹之前先清理其中的 `nul` 文件。
+> In short: it creates a `delete` key under the folder's shell registry entry. When this key exists, it overrides the native right-click Delete for folders. The custom logic calls `wscript.exe` to clean up `nul` files before deleting the folder.
 
-具体说：
+In detail:
 
-安装时：
+On install:
 
-1. 在 `%LOCALAPPDATA%\nonul\` 下生成 `delete-directory.vbs` 辅助脚本
-2. 创建注册表键 `HKCU\Software\Classes\Directory\shell\delete`，设置：
-   - 默认值：`删除(&D)`（显示名称，和原生一致）
-   - `Icon`：`shell32.dll,-240`（删除图标，和原生一致）
-3. 创建子键 `HKCU\Software\Classes\Directory\shell\delete\command`，设置：
-   - 默认值：`wscript.exe "%LOCALAPPDATA%\nonul\delete-directory.vbs" "%1"`
+1. Generates a helper script `delete-directory.vbs` under `%LOCALAPPDATA%\nonul\`
+2. Creates the registry key `HKCU\Software\Classes\Directory\shell\delete` with:
+   - Default value: `Delete(&D)` (display name, same as native)
+   - `Icon`: `shell32.dll,-240` (delete icon, same as native)
+3. Creates the subkey `HKCU\Software\Classes\Directory\shell\delete\command` with:
+   - Default value: `wscript.exe "%LOCALAPPDATA%\nonul\delete-directory.vbs" "%1"`
 
-当用户右键删除文件夹时，Windows 会优先使用 `HKCU` 下的 `shell\delete` 覆盖原生行为，调用链为：
-
-```
-wscript.exe（无窗口启动器）→ VBS 脚本 → powershell.exe（静默执行实际删除逻辑）
-```
-
-卸载时：
-
-1. 删除注册表键 `HKCU\Software\Classes\Directory\shell\delete`（恢复原生删除）
-2. 删除 `%LOCALAPPDATA%\nonul\` 目录（清理辅助脚本）
-
-## 为什么只处理文件夹，不处理单个文件？
-
-作为更改注册表的项目，结构应尽可能简单。常规需要删nul文件的场景就是需要删除整个项目，即整个文件夹。由于nul文件并不会对项目有实际影响，不存在必须要单独删除nul文件的场景。
-
-## 它怎么工作？
-
-安装后，文件夹的右键「删除」会被替换为 nonul 版本：
+When a user right-clicks Delete on a folder, Windows prioritizes the `HKCU` `shell\delete` key over the native behavior. The call chain is:
 
 ```
-右键删除文件夹
-  → 递归找出文件夹里所有叫 nul 的文件（不区分大小写）
-  → 用 \\?\ 前缀路径逐个删除
-  → 把文件夹送进回收站
+wscript.exe (windowless launcher) → VBS script → powershell.exe (silently runs the actual delete logic)
 ```
 
-对于不含 `nul` 的文件夹，和原生删除完全一致。
+On uninstall:
+
+1. Removes the registry key `HKCU\Software\Classes\Directory\shell\delete` (restores native Delete)
+2. Removes the `%LOCALAPPDATA%\nonul\` directory (cleans up the helper script)
+
+## Why only folders, not individual files?
+
+As a project that modifies the registry, the scope should be as minimal as possible. The typical scenario requiring `nul` file cleanup is deleting an entire project folder. Since `nul` files don't actually affect your project's functionality, there's no real need to delete them individually.
+
+## How does it work?
+
+After installation, the right-click "Delete" for folders is replaced with the nonul version:
+
+```
+Right-click Delete on a folder
+  → Recursively find all files named nul (case-insensitive)
+  → Delete each one using the \\?\ prefix path
+  → Send the folder to the Recycle Bin
+```
+
+For folders that don't contain `nul` files, it behaves identically to the native Delete.
 
 ## License
 
