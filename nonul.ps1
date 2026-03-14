@@ -12,11 +12,9 @@ param(
 
 try {
 
-    # VBS 辅助脚本的存放目录
-    $nonulDirectory = Join-Path $env:LOCALAPPDATA "nonul"
-
     # 安装：写入 VBS 辅助脚本并覆盖文件夹的 shell\delete
     function Install-Nonul {
+        $nonulDirectory = Join-Path $env:LOCALAPPDATA "nonul"
         $registryPath = "Software\Classes\Directory"
 
         # 文件夹删除处理器：先递归删 nul 文件，再把文件夹送回收站
@@ -61,6 +59,7 @@ CreateObject("WScript.Shell").Run command, 0, False
 
     # 卸载：删除 shell\delete 键和 VBS 辅助脚本，恢复原生删除
     function Uninstall-Nonul {
+        $nonulDirectory = Join-Path $env:LOCALAPPDATA "nonul"
         $registryPath = "Software\Classes\Directory"
 
         Write-Host ""
