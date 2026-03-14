@@ -1,9 +1,9 @@
 {
   "version": "1.0.0",
   "description": "替换 Windows 资源管理器右键菜单中的「删除」，能处理 nul 保留文件名",
-  "homepage": "https://github.com/nonul/nonul",
+  "homepage": "https://github.com/4laoshiren/nonul",
   "license": "MIT",
-  "url": "https://github.com/nonul/nonul/archive/refs/tags/v1.0.0.zip",
+  "url": "https://github.com/4laoshiren/nonul/archive/refs/tags/v1.0.0.zip",
   "hash": "8748FAB45FDD24B94B430BC67CF1BD1804AE43E909155FF68C7A3FF68A35275F",
   "extract_dir": "nonul-1.0.0",
   "post_install": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$dir\\nonul.ps1\" -Install",
