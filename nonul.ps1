@@ -27,7 +27,7 @@ CreateObject("WScript.Shell").Run command, 0, False
 '@
 
         Write-Host ""
-        Write-Host "=== nonul 安装开始 ===" -ForegroundColor Cyan
+        Write-Host "=== nonul install started ===" -ForegroundColor Cyan
         Write-Host ""
 
         # 创建辅助脚本目录
@@ -37,11 +37,11 @@ CreateObject("WScript.Shell").Run command, 0, False
 
         # 写入 VBS 辅助脚本
         $vbsFilePath = Join-Path $nonulDirectory "delete-directory.vbs"
-        Write-Host "写入辅助脚本: $vbsFilePath"
+        Write-Host "Write helper script: $vbsFilePath"
         [System.IO.File]::WriteAllText($vbsFilePath, $vbsContent)
 
         # 创建 shell\delete 键，设置显示名称和图标
-        Write-Host "覆盖删除菜单: HKCU\$registryPath\shell\delete"
+        Write-Host "Override delete menu: HKCU\$registryPath\shell\delete"
         $deleteKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey("$registryPath\shell\delete")
         $deleteKey.SetValue("", "删除(&D)")
         $deleteKey.SetValue("Icon", "shell32.dll,-240")
@@ -53,8 +53,8 @@ CreateObject("WScript.Shell").Run command, 0, False
         $commandKey.Close()
 
         Write-Host ""
-        Write-Host "=== nonul 安装完成 ===" -ForegroundColor Green
-        Write-Host "文件夹右键「删除」已替换，现在可以删除含 nul 文件的文件夹了。" -ForegroundColor Green
+        Write-Host "=== nonul install completed ===" -ForegroundColor Green
+        Write-Host "Folder right-click 'Delete' has been replaced." -ForegroundColor Green
     }
 
     # 卸载：删除 shell\delete 键和 VBS 辅助脚本，恢复原生删除
@@ -63,26 +63,26 @@ CreateObject("WScript.Shell").Run command, 0, False
         $registryPath = "Software\Classes\Directory"
 
         Write-Host ""
-        Write-Host "=== nonul 卸载开始 ===" -ForegroundColor Cyan
+        Write-Host "=== nonul uninstall started ===" -ForegroundColor Cyan
         Write-Host ""
 
         # 恢复原生删除
         $shellKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("$registryPath\shell", $true)
         if ($shellKey -and ($shellKey.GetSubKeyNames() -contains "delete")) {
-            Write-Host "恢复原生删除菜单: HKCU\$registryPath\shell\delete"
+            Write-Host "Restore native delete menu: HKCU\$registryPath\shell\delete"
             $shellKey.DeleteSubKeyTree("delete")
         }
         if ($shellKey) { $shellKey.Close() }
 
         # 清理辅助脚本目录
         if (Test-Path $nonulDirectory) {
-            Write-Host "清理辅助脚本: $nonulDirectory"
+            Write-Host "Clean helper script: $nonulDirectory"
             Remove-Item -Path $nonulDirectory -Recurse -Force -ErrorAction SilentlyContinue
         }
 
         Write-Host ""
-        Write-Host "=== nonul 卸载完成 ===" -ForegroundColor Green
-        Write-Host "文件夹右键「删除」已恢复为系统默认。" -ForegroundColor Green
+        Write-Host "=== nonul uninstall completed ===" -ForegroundColor Green
+        Write-Host "Folder right-click 'Delete' has been restored to system default." -ForegroundColor Green
     }
 
     # 主入口：无参数或 -Install 执行安装，-Uninstall 执行卸载
@@ -94,6 +94,6 @@ CreateObject("WScript.Shell").Run command, 0, False
 
 } catch {
     Write-Host ""
-    Write-Host "出错了: $_" -ForegroundColor Red
+    Write-Host "Error: $_" -ForegroundColor Red
     Write-Host $_.ScriptStackTrace -ForegroundColor Red
 }
