@@ -1,6 +1,41 @@
 # nonul
 
+> **TL;DR** 装完之后，右键删除文件夹就能删除含有nul文件的文件夹，解决使用claude code的项目删除时需要先处理nul文件的烦躁。
+
 替换 Windows 资源管理器右键菜单中**文件夹**的「删除」。用户看到的还是一个「删除」，但这个版本能处理含 `nul` 文件的文件夹。
+
+## 如何使用？
+
+两种方式任选其一，装完立即生效，无需其他操作，你的windows文件资源管理器右键菜单中的删除将能够直接删除含有nul文件的文件夹。
+
+### irm（无需任何工具）
+
+安装：
+
+```powershell
+irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 | iex
+```
+
+卸载：
+
+```powershell
+irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 -OutFile nonul.ps1; .\nonul.ps1 -Uninstall
+```
+
+### Scoop
+
+安装：
+
+```powershell
+scoop bucket add nonul https://github.com/4laoshiren/nonul
+scoop install nonul
+```
+
+卸载：
+
+```powershell
+scoop uninstall nonul
+```
 
 ## 为什么需要这个？
 
@@ -22,6 +57,32 @@ Claude Code 在 Windows 上会在工作目录中创建无法删除的 `nul` 文�
 
 目前唯一的删除方式是通过命令行执行 `[System.IO.File]::Delete('\\?\完整路径')`，但这对日常使用很不直观——删除项目应当可以右键删除。
 
+## 项目做了什么？
+
+> 一言以蔽之：在注册表的文件夹操作中里创建了一个delete键，此键存在时，会覆盖原生右键文件夹删除操作。此delete键的逻辑为，调用wscript.exe，删文件夹之前先清理其中的 `nul` 文件。
+
+具体说：
+
+安装时：
+
+1. 在 `%LOCALAPPDATA%\nonul\` 下生成 `delete-directory.vbs` 辅助脚本
+2. 创建注册表键 `HKCU\Software\Classes\Directory\shell\delete`，设置：
+   - 默认值：`删除(&D)`（显示名称，和原生一致）
+   - `Icon`：`shell32.dll,-240`（删除图标，和原生一致）
+3. 创建子键 `HKCU\Software\Classes\Directory\shell\delete\command`，设置：
+   - 默认值：`wscript.exe "%LOCALAPPDATA%\nonul\delete-directory.vbs" "%1"`
+
+当用户右键删除文件夹时，Windows 会优先使用 `HKCU` 下的 `shell\delete` 覆盖原生行为，调用链为：
+
+```
+wscript.exe（无窗口启动器）→ VBS 脚本 → powershell.exe（静默执行实际删除逻辑）
+```
+
+卸载时：
+
+1. 删除注册表键 `HKCU\Software\Classes\Directory\shell\delete`（恢复原生删除）
+2. 删除 `%LOCALAPPDATA%\nonul\` 目录（清理辅助脚本）
+
 ## 为什么只处理文件夹，不处理单个文件？
 
 作为更改注册表的项目，结构应尽可能简单。常规需要删nul文件的场景就是需要删除整个项目，即整个文件夹。由于nul文件并不会对项目有实际影响，不存在必须要单独删除nul文件的场景。
@@ -38,45 +99,6 @@ Claude Code 在 Windows 上会在工作目录中创建无法删除的 `nul` 文�
 ```
 
 对于不含 `nul` 的文件夹，和原生删除完全一致。
-
-## 安装
-
-两种方式任选其一，装完即生效。
-
-### irm（无需任何工具）
-
-```powershell
-irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 | iex
-```
-
-### Scoop
-
-```powershell
-scoop bucket add nonul https://github.com/4laoshiren/nonul
-scoop install nonul
-```
-
-## 卸载
-
-### irm
-
-```powershell
-irm https://raw.githubusercontent.com/4laoshiren/nonul/main/nonul.ps1 -OutFile nonul.ps1; .\nonul.ps1 -Uninstall
-```
-
-### Scoop
-
-```powershell
-scoop uninstall nonul
-```
-
-## 原理
-
-安装时修改当前用户的注册表（`HKCU`），不需要管理员权限：
-
-在 `HKCU\Software\Classes\Directory\shell` 下创建 `delete` 键，用自定义命令覆盖原生的文件夹删除。
-
-命令通过 `wscript.exe` 调用 VBS 辅助脚本，VBS 静默启动 PowerShell 执行实际的删除逻辑。卸载时删除该注册表键，恢复原生删除。
 
 ## License
 
