@@ -1,5 +1,5 @@
-# nonul — 替换 Windows 资源管理器右键菜单中文件夹的「删除」，能处理含 nul 文件的文件夹
-# 用法：.\nonul.ps1 [-Install] [-Uninstall]（无参数默认安装）
+﻿# nonul — replace folder "Delete" in Windows Explorer context menu, handles folders containing nul files
+# Usage: .\nonul.ps1 [-Install] [-Uninstall] (defaults to Install)
 
 [CmdletBinding(DefaultParameterSetName = 'Install')]
 param(
@@ -12,12 +12,12 @@ param(
 
 try {
 
-    # 安装：写入 VBS 辅助脚本并覆盖文件夹的 shell\delete
+    # Install: write VBS helper script and override folder shell\delete
     function Install-Nonul {
         $nonulDirectory = Join-Path $env:LOCALAPPDATA "nonul"
         $registryPath = "Software\Classes\Directory"
 
-        # 文件夹删除处理器：先递归删 nul 文件，再把文件夹送回收站
+        # Folder delete handler: recursively remove nul files, then send folder to recycle bin
         $vbsContent = @'
 Dim folderPath, escapedPath, command
 folderPath = WScript.Arguments(0)
@@ -30,24 +30,24 @@ CreateObject("WScript.Shell").Run command, 0, False
         Write-Host "=== nonul install started ===" -ForegroundColor Cyan
         Write-Host ""
 
-        # 创建辅助脚本目录
+        # Create helper script directory
         if (-not (Test-Path $nonulDirectory)) {
             New-Item -Path $nonulDirectory -ItemType Directory -Force | Out-Null
         }
 
-        # 写入 VBS 辅助脚本
+        # Write VBS helper script
         $vbsFilePath = Join-Path $nonulDirectory "delete-directory.vbs"
         Write-Host "Write helper script: $vbsFilePath"
         [System.IO.File]::WriteAllText($vbsFilePath, $vbsContent)
 
-        # 创建 shell\delete 键，设置显示名称和图标
+        # Create shell\delete key with display name and icon
         Write-Host "Override delete menu: HKCU\$registryPath\shell\delete"
         $deleteKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey("$registryPath\shell\delete")
         $deleteKey.SetValue("", "删除(&D)")
         $deleteKey.SetValue("Icon", "shell32.dll,-240")
         $deleteKey.Close()
 
-        # 创建 command 子项，指向 VBS 辅助脚本
+        # Create command subkey pointing to VBS helper script
         $commandKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey("$registryPath\shell\delete\command")
         $commandKey.SetValue("", "wscript.exe `"$vbsFilePath`" `"%1`"")
         $commandKey.Close()
@@ -57,7 +57,7 @@ CreateObject("WScript.Shell").Run command, 0, False
         Write-Host "Folder right-click 'Delete' has been replaced." -ForegroundColor Green
     }
 
-    # 卸载：删除 shell\delete 键和 VBS 辅助脚本，恢复原生删除
+    # Uninstall: remove shell\delete key and VBS helper script, restore native delete
     function Uninstall-Nonul {
         $nonulDirectory = Join-Path $env:LOCALAPPDATA "nonul"
         $registryPath = "Software\Classes\Directory"
@@ -66,7 +66,7 @@ CreateObject("WScript.Shell").Run command, 0, False
         Write-Host "=== nonul uninstall started ===" -ForegroundColor Cyan
         Write-Host ""
 
-        # 恢复原生删除
+        # Restore native delete
         $shellKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey("$registryPath\shell", $true)
         if ($shellKey -and ($shellKey.GetSubKeyNames() -contains "delete")) {
             Write-Host "Restore native delete menu: HKCU\$registryPath\shell\delete"
@@ -74,7 +74,7 @@ CreateObject("WScript.Shell").Run command, 0, False
         }
         if ($shellKey) { $shellKey.Close() }
 
-        # 清理辅助脚本目录
+        # Clean up helper script directory
         if (Test-Path $nonulDirectory) {
             Write-Host "Clean helper script: $nonulDirectory"
             Remove-Item -Path $nonulDirectory -Recurse -Force -ErrorAction SilentlyContinue
@@ -85,7 +85,7 @@ CreateObject("WScript.Shell").Run command, 0, False
         Write-Host "Folder right-click 'Delete' has been restored to system default." -ForegroundColor Green
     }
 
-    # 主入口：无参数或 -Install 执行安装，-Uninstall 执行卸载
+    # Entry point: no args or -Install runs install, -Uninstall runs uninstall
     if ($Uninstall) {
         Uninstall-Nonul
     } else {
