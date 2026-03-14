@@ -4,7 +4,7 @@
   "homepage": "https://github.com/4laoshiren/nonul",
   "license": "MIT",
   "url": "https://github.com/4laoshiren/nonul/archive/refs/tags/v1.0.0.zip",
-  "hash": "E46D01718910556BDA878C850560FEABF4FEBAFE8CABFF646406ABE58E56A4CA",
+  "hash": "0FC25041ADAF3D418BE9595F564D03353F11F7E9A2885E5594EE7FC84943D89A",
   "extract_dir": "nonul-1.0.0",
   "post_install": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$dir\\nonul.ps1\" -Install",
   "pre_uninstall": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$dir\\nonul.ps1\" -Uninstall"
