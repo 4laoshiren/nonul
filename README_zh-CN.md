@@ -1,5 +1,7 @@
 # nonul
 
+> **已归档：** 该问题已在 [Claude Code v2.1.69](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#2169) 中被官方修复。新版本不再需要本工具。如果你仍有旧版本残留的 `nul` 文件，可以使用本工具清理。
+
 [English](README.md)
 
 替换 Windows 资源管理器右键菜单中**文件夹**的「删除」。用户看到的还是一个「删除」，但这个版本能处理含 `nul` 文件的文件夹。

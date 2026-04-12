@@ -1,5 +1,7 @@
 # nonul
 
+> **Archived:** This issue has been officially fixed in [Claude Code v2.1.69](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#2169). This tool is no longer needed for new versions. If you still have leftover `nul` files from older versions, you can use this tool to clean them up.
+
 [中文版](README_zh-CN.md)
 
 Replaces the **folder** "Delete" option in the Windows Explorer context menu. You still see the same "Delete", but this version can handle folders containing `nul` files.
